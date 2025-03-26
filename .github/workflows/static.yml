@@ -1,0 +1,31 @@
+name: Update Classes
+
+on:
+  workflow_dispatch: # manually trigger
+  repository_dispatch: # trigger by webhook (example below)
+    types: [update_class] # id for webhook to target
+
+jobs:
+  classUpdate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - id: update
+        uses: metro420yt/class-update@v1-rc
+        with:
+          folder: stuff
+          ext: scss
+
+      - uses: gha-utilities/sass-build@v0.6.0 #compile scss files
+        if: ${{steps.update.outputs.totalChanges > 0}} #skip if no class changes
+        with:
+          source: ./NieR-Import.theme.scss
+          destination: ./betterdiscord/main.css
+          outputStyle: expanded
+      - uses: EndBug/add-and-commit@v9
+        if: ${{steps.update.outputs.totalChanges > 0}} #skip if no class changes
+        with:
+          default_author: github_actions
+          message: "chore: update classes"
+          fetch: true
